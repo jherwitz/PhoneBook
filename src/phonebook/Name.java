@@ -50,6 +50,11 @@ public class Name implements Comparable<Name>{
 			&& lastName == n.lastName;
 	}
 	
+	/**
+	 * Generates hashcode for this Name object.
+	 * Hashcode is derived using Effective Java heuristic on
+	 * internal name fields.
+	 */
 	@Override
 	public int hashCode(){
 		int result = 17;
