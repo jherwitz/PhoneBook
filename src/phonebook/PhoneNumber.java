@@ -1,17 +1,23 @@
 package phonebook;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 
-import org.junit.Test;
-
-//from effective java, item 9
+/**
+ * Class representing a phone number.
+ * Structure mainly taken from Effective Java.
+ * @author jherwitz
+ */
 public final class PhoneNumber implements Comparable<PhoneNumber> {
 	private final Short areaCode;
 	private final Short prefix;
 	private final Short lineNumber;
 	
+	/**
+	 * Constructs a PhoneNumber object.
+	 * @param areaCode The first three digits of the phone number.
+	 * @param prefix Unintuitively, the middle three digits of the phone number. 
+	 * @param lineNumber The last four digits of the phone number.
+	 */
 	public PhoneNumber(int areaCode, int prefix, int lineNumber) {
 		PhoneNumber.rangeCheck(areaCode, 999, "area code");
 		PhoneNumber.rangeCheck(prefix, 999, "prefix");
@@ -21,25 +27,22 @@ public final class PhoneNumber implements Comparable<PhoneNumber> {
 		this.lineNumber = (short) lineNumber;
 	}
 	
+	/**
+	 * Method which validates whether a given integer n satisfies the expression: 0 <= n <= max.
+	 * Shamelessly taken from Effective Java. 
+	 * @param arg int to validate
+	 * @param max maximum value for arg
+	 * @param name name of value for exception messaging. 
+	 */
 	private static void rangeCheck(int arg, int max, String name) {
 		if(arg < 0 || arg > max){
 			throw new IllegalArgumentException(name + ": " + arg);
 		}
 	}
 	
-	public short getAreaCode(){
-		return areaCode.shortValue();
-	}
-	
-	public short getPrefix(){
-		return prefix.shortValue();
-	}
-	
-	public short getLineNumber(){
-		return lineNumber.shortValue();
-	}
-	
-	//TODO: GENERIC HASH CODE FUNC USING REFLECTION
+	/**
+	 * Returns the hashcode of this object. 
+	 */
 	@Override public int hashCode() {
 		int result = 17;
 		result = 31 * result + areaCode;
@@ -49,6 +52,10 @@ public final class PhoneNumber implements Comparable<PhoneNumber> {
 		
 	}
 	
+	/**
+	 * Method that generically generates this object's hashcode using reflection. Should be equivalent to hashCode().
+	 * Could probably be generalized to other objects, but it requires private field access. 
+	 */
 	public int genericHashCode(){
 		int result = 17;
 		Field[] fields = this.getClass().getDeclaredFields();
@@ -71,22 +78,30 @@ public final class PhoneNumber implements Comparable<PhoneNumber> {
 		return result;
 	}
 	
-	@Override public String toString() {
+	/**
+	 * Returns the phone number in string form. This takes the form of "(XYX)-XYX-XXYX".
+	 */
+	@Override 
+	public String toString() {
 		return String.format("(%03d)-%03d-%04d", areaCode, prefix, lineNumber);
 	}
 
 	/**
-	 * compareTo method which takes advantage of result sign, instead of forcing -1/0/1
-	 * Assumes precedence of areaCode > prefix > lineNumber 
+	 * Comparable method for two PhoneNumbers. Assumes precedence of areaCode > prefix > lineNumber. 
+	 * Modified from method in Effective Java.
 	 */
 	@Override
 	public int compareTo(PhoneNumber number) {
-		int areaCodeDiff = areaCode - number.getAreaCode();
+		if(number == null){
+			throw new IllegalArgumentException("null paramter passed to compareTo");
+		}
+		
+		int areaCodeDiff = areaCode - number.areaCode;
 		if(areaCodeDiff != 0) {
 			return areaCodeDiff;
 		}
 		
-		int prefixDiff = prefix - number.getPrefix();
+		int prefixDiff = prefix - number.prefix;
 		if(prefixDiff != 0) {
 			return prefixDiff;
 		}
@@ -94,4 +109,28 @@ public final class PhoneNumber implements Comparable<PhoneNumber> {
 		return lineNumber - number.lineNumber;
 	}
 
+	/**
+	 * Method which tests equality between two PhoneNumber objects. 
+	 * It adheres to the general contract for equals: 
+	 * <ul>
+	 * <li> Reflexivity: x.equals(x) <-> true </li>
+	 * <li> Symmetry: x.equals(x) <-> y.equals(x) </li>
+	 * <li> Transitivity: x.equals(y) ^ y.equals(z) -> x.equals(z) </li>
+	 * <li> Consistency: x(t).equals(y(t)) <-> x(t+1).equals(y(t+t)) 
+	 * 			if x(t)=x(t+1) ^ y(t)=y(t+1)  </li>
+	 * </ul> 
+	 * These properties have been unit tested in tst/phonebook.PhoneNumberTests
+	 */
+	@Override
+	public boolean equals(Object o){
+		if(!(o instanceof PhoneNumber)){
+			return false;
+		}
+		PhoneNumber pn = (PhoneNumber) o;
+		return 
+			areaCode.equals(pn.areaCode)
+			&& prefix.equals(pn.prefix)
+			&& lineNumber.equals(pn.lineNumber);
+	}
+	
 }
